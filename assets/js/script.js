@@ -36,7 +36,21 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         );
 
+        const contentType = response.headers.get("content-type") || "";
+
+        if (!contentType.includes("application/json")) {
+          const rawText = await response.text();
+          console.error("Server did not return JSON. Raw response:", rawText);
+          throw new Error(
+            "پاسخ سرور معتبر نیست (غیر JSON). لطفاً با Administrator تماس بگیرید."
+          );
+        }
+
         const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || `خطای سرور: ${response.status}`);
+        }
 
         statusBox.textContent = result.message || "در حال ارسال...";
         statusBox.classList.remove("success-message", "error-message");
@@ -50,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
           form.reset();
         }
       } catch (error) {
-        statusBox.textContent = "خطا در ارسال پیام. لطفاً دوباره تلاش کنید.";
+        statusBox.textContent = error.message || "خطا در ارسال پیام. لطفاً دوباره تلاش کنید.";
         statusBox.classList.remove("success-message");
         statusBox.classList.add("error-message");
         statusBox.hidden = false;
